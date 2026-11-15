@@ -1,0 +1,13 @@
+{
+  "name": "umbrella",
+  "private": true,
+  "version": "8.0.0",
+  "description": "Metodologia SDD Umbrella: fuentes rulesync y empaquetado multi-agente (Claude Code, Antigravity y el resto de targets soportados).",
+  "scripts": {
+    "build": "./build.sh",
+    "convert-source": "python3 scripts/convert_source.py"
+  },
+  "devDependencies": {
+    "rulesync": "43.8.2"
+  }
+}

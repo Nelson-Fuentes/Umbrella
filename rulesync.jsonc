@@ -1,0 +1,19 @@
+// rulesync.jsonc
+{
+  "$schema": "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
+
+  // Targets real para la versión fijada en package.json. Verificar con:
+  //   npx --no-install rulesync generate --help
+  //   npx --no-install rulesync docs reference/supported-tools
+  // antes de asumir que un nombre de target sigue existiendo.
+  "targets": ["*"],
+
+  // La metodología no trae MCP servers propios: se omite "mcp". "hooks" se deja
+  // declarado para cuando se agreguen (.rulesync/hooks.jsonc); hoy no produce nada.
+  "features": ["rules", "subagents", "skills", "hooks"],
+
+  "outputRoots": ["."],
+
+  "delete": true,
+  "verbose": false
+}

@@ -1,0 +1,5 @@
+{
+  "$schema": "https://antigravity.google/schemas/v1/plugin.json",
+  "name": "sdd-umbrella",
+  "description": "Metodología SDD Umbrella (v8): skills sdd-* (init, specify, plan, implement, cierres de fase, sprint y fixes), subagentes de lectura y de git/GitHub, y reglas de la metodología para Antigravity."
+}

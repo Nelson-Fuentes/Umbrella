@@ -1,10 +1,18 @@
 #!/usr/bin/env bash
-# Instala la build de dist/project/ en los agentes detectados en esta maquina.
-# No sobrescribe nada sin confirmacion explicita del usuario.
+# Instala la build de este repo en los agentes detectados en esta maquina.
+# Claude Code se instala como plugin real (marketplace local + `claude plugin
+# install`); el resto de agentes, copiando dist/project/ a su carpeta de
+# configuracion. No sobrescribe nada sin confirmacion explicita del usuario.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DIST="${SCRIPT_DIR}/dist/project"
+CLAUDE_MARKETPLACE_DIR="${SCRIPT_DIR}/dist/claude"
+CLAUDE_MARKETPLACE_NAME="umbrella-local"
+CLAUDE_PLUGIN_ID="umbrella@${CLAUDE_MARKETPLACE_NAME}"
+# Scope "user": se copia a una ruta estable fuera del repo, para que el
+# plugin siga funcionando aunque esta carpeta se mueva o se borre despues.
+CLAUDE_STABLE_DIR="${HOME}/.local/share/umbrella-sdd/claude-plugin"
 TARGET_DIR="${1:-$(pwd)}"
 
 if [ ! -d "$DIST" ]; then
@@ -17,8 +25,8 @@ fi
 # resuelve contra HOME (instalacion global del agente).
 # El marcador puede llevar varias rutas separadas por ',': se detecta si
 # CUALQUIERA de ellas existe (por ejemplo, config de proyecto o global).
+# Claude Code no esta aqui: se instala como plugin (ver install_claudecode_plugin).
 CANDIDATES=(
-  "claudecode|.claude,~/.claude|.claude/rules;.claude/agents;.claude/skills|.claude"
   "cursor|.cursor|.cursor/rules;.cursor/agents;.cursor/skills|.cursor"
   "antigravity|.agents|.agents/rules;.agents/agents;.agents/skills|.agents"
   "antigravity-global|~/.gemini|.agents/rules;.agents/agents;.agents/skills|~/.gemini/config"
@@ -42,10 +50,45 @@ detect_marker() {
   return 1
 }
 
+install_claudecode_plugin() {
+  local scope="$1"
+  if ! command -v claude >/dev/null 2>&1; then
+    echo "  error: no se encontro el comando 'claude' en el PATH. Instala Claude Code o agrega el binario al PATH y reintenta." >&2
+    return 1
+  fi
+
+  local marketplace_src="$CLAUDE_MARKETPLACE_DIR"
+  if [ "$scope" = "user" ]; then
+    echo "  copiando ${CLAUDE_MARKETPLACE_DIR} -> ${CLAUDE_STABLE_DIR} (copia estable fuera del repo)"
+    rm -rf "$CLAUDE_STABLE_DIR"
+    mkdir -p "$CLAUDE_STABLE_DIR"
+    cp -r "${CLAUDE_MARKETPLACE_DIR}/." "${CLAUDE_STABLE_DIR}/"
+    marketplace_src="$CLAUDE_STABLE_DIR"
+    # Si ya estaba registrado apuntando a otra ruta (p.ej. el repo), hay que
+    # quitarlo antes: 'marketplace add' no reubica un nombre existente.
+    claude plugin marketplace remove "$CLAUDE_MARKETPLACE_NAME" --scope "$scope" >/dev/null 2>&1 || true
+  fi
+
+  echo "  claude plugin marketplace add ${marketplace_src} --scope ${scope}"
+  claude plugin marketplace add "$marketplace_src" --scope "$scope"
+  echo "  claude plugin install ${CLAUDE_PLUGIN_ID} --scope ${scope}"
+  claude plugin install "$CLAUDE_PLUGIN_ID" --scope "$scope"
+}
+
 echo "Buscando agentes instalados en ${TARGET_DIR} y en \$HOME..."
 DETECTED_KEYS=()
 DETECTED_LABELS=()
 i=1
+
+if command -v claude >/dev/null 2>&1; then
+  DETECTED_KEYS+=("claudecode")
+  DETECTED_LABELS+=("$i) claudecode  (plugin de proyecto via 'claude plugin install', scope project)")
+  i=$((i + 1))
+  DETECTED_KEYS+=("claudecode-global")
+  DETECTED_LABELS+=("$i) claudecode-global  (plugin de usuario, copia estable fuera del repo, scope user)")
+  i=$((i + 1))
+fi
+
 for entry in "${CANDIDATES[@]}"; do
   IFS='|' read -r key marker _srcs _dst <<<"$entry"
   if detect_marker "$marker"; then
@@ -80,6 +123,17 @@ else
 fi
 
 for key in "${SELECTED_KEYS[@]}"; do
+  case "$key" in
+    claudecode)
+      install_claudecode_plugin project
+      continue
+      ;;
+    claudecode-global)
+      install_claudecode_plugin user
+      continue
+      ;;
+  esac
+
   for entry in "${CANDIDATES[@]}"; do
     IFS='|' read -r ckey _marker srcs dst <<<"$entry"
     [ "$ckey" = "$key" ] || continue
@@ -109,4 +163,4 @@ for key in "${SELECTED_KEYS[@]}"; do
   done
 done
 
-echo "Listo. Reinicia la sesion del agente para que recargue las skills/subagentes."
+echo "Listo. Reinicia la sesion del agente para que recargue las skills/subagentes/plugins."

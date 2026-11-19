@@ -31,6 +31,10 @@ Esto genera:
   (`mcp,commands,subagents,skills,hooks`; Claude Code no soporta `rules` en
   formato de plugin, asi que las reglas se copian como referencia en
   `docs/rules/`).
+- `dist/claude/.claude-plugin/marketplace.json` — marketplace local
+  (`umbrella-local`) que apunta a `./plugins/umbrella`, para que Claude Code
+  instale el plugin con `claude plugin install` en vez de copiar archivos
+  sueltos a `.claude/`.
 - `dist/antigravity/umbrella/` — plugin `antigravity-plugin`
   (`rules,mcp,subagents,skills,hooks`).
 - `docs/soporte-por-agente.md` — tabla agente x feature, derivada en cada
@@ -48,10 +52,25 @@ Tras una build, copia el resultado a los agentes detectados en el equipo:
 ./scripts/install.sh [ruta-del-proyecto]
 ```
 
-En Windows: `./scripts/install.ps1 [-TargetDir <ruta>]`. Ambos detectan
-agentes por la presencia de sus directorios (`.claude`, `.cursor`, `.agents`,
-`~/.gemini`, ...), preguntan cuales instalar, y nunca sobrescriben un archivo
-existente sin confirmacion.
+En Windows: `./scripts/install.ps1 [-TargetDir <ruta>]`.
+
+- **Claude Code** se instala como plugin real, no copiando archivos: si el
+  comando `claude` esta en el `PATH`, el script ofrece `claudecode` (scope
+  `project`) y `claudecode-global` (scope `user`).
+  - `claudecode` registra el marketplace directamente desde `dist/claude/`
+    del repo (`claude plugin marketplace add dist/claude --scope project`
+    + `claude plugin install umbrella@umbrella-local --scope project`).
+  - `claudecode-global` primero copia `dist/claude/` a una ruta estable
+    fuera del repo (`~/.local/share/umbrella-sdd/claude-plugin/`) y
+    registra el marketplace desde ahi con `--scope user`, para que el
+    plugin siga disponible en cualquier proyecto de la maquina aunque
+    esta carpeta se mueva o se borre despues. Se puede reinstalar
+    (`claudecode-global` de nuevo) para refrescar esa copia tras una
+    build nueva.
+- El resto de agentes (`cursor`, `antigravity`, `antigravity-global`,
+  `copilot`, `codexcli`, `opencode`) se detectan por la presencia de sus
+  directorios (`.cursor`, `.agents`, `~/.gemini`, ...) y se instalan copiando
+  `dist/project/`; nunca sobrescriben un archivo existente sin confirmacion.
 
 ## Verificar antes de asumir nombres de targets/features
 

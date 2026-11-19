@@ -1,7 +1,7 @@
 ---
 name: implement-close
 targets: ["*"]
-description: "Cierra la implementación de UN issue de tarea (TK) en la metodología SDD Umbrella (v8): verifica el trabajo hecho por implement, hace el commit único y el push, regenera el grafo del submódulo, actualiza el Vault a approved con vault-updater, marca las casillas del TK, crea el PR de la rama de trabajo hacia la base del submódulo y actualiza los estados del TK, su PL y su SP. Nunca cierra issues. Úsala al terminar implement."
+description: "Cierra la implementación de UN issue de tarea (TK) en la metodología SDD Umbrella (v8): verifica el trabajo hecho por implement, hace el commit único y el push, regenera el grafo del submódulo, actualiza el Vault a approved con vault-updater, marca las casillas del TK, crea el PR de la rama de trabajo hacia la base del submódulo (o agrega commits de corrección al PR existente si el TK viene de Con Observaciones) y actualiza los estados del TK, su PL y su SP. Nunca cierra issues. Úsala al terminar implement, y de nuevo tras corregir las observaciones de review-pr."
 ---
 
 # implement-close
@@ -26,8 +26,9 @@ El contexto principal no ejecuta `git`, `gh` ni el MCP de GitHub:
 
 ### 1. Verificación (en una sola llamada de lectura)
 - `git-reader` en **UNA SOLA INVOCACIÓN** agrupada:
-  - `issue` sobre el `TK`, el `PL` y el `SP`: el `TK` está abierto y en `Implementando`; su `PL` y su `SP` están abiertos.
+  - `issue` sobre el `TK`, el `PL` y el `SP`: el `TK` está abierto y en `Implementando` (primera vez) o en `Con Observaciones` (retrabajo tras una revisión con hallazgos; ver "PR de la tarea" más abajo); su `PL` y su `SP` están abiertos.
   - `rama` y `estado-repos`: la rama de trabajo existe, está vinculada al `TK` y es la rama activa del submódulo; tiene cambios sin commitear (los de `implement`) y no hay otros cambios sin commitear en el Vault.
+  - `pr`: si el `TK` viene de `Con Observaciones`, ya existe un PR abierto de esa rama hacia la base; se reutiliza (ver paso 5), no se crea otro.
   - `diff`: exporta el diff `base...rama` (con los cambios sin commitear) a una ruta fuera del repositorio y devuelve la lista de archivos tocados.
 - Cada tarea `T00X` tiene su implementación en los cambios y estos no contienen nada fuera del alcance del `TK` (la configuración SDD pendiente se separa y no cuenta como fuera de alcance): se comprueba con la lista de archivos tocados y con la revisión de `code-reviewer` (sin "tareas sin evidencia en el diff"). Si falta una tarea o sobra código, es un bloqueo: informarlo, no corregirlo aquí.
 - La regresión del submódulo pasa (correrla de nuevo en esta rama).
@@ -52,17 +53,18 @@ El contexto principal no ejecuta `git`, `gh` ni el MCP de GitHub:
 
 ### 5. PR de la tarea
 Con confirmación del usuario:
-- **PR:** `pr-manager` (`crear`) en el repositorio del submódulo, **directamente desde la rama de trabajo hacia la rama base del submódulo** (`develop`, `release` o `main`/`master`, según el origen del `SP`), NUNCA hacia una rama de especificación intermedia (que no existe en los submódulos). Pasando como `issues a vincular` el `TK` (y referencias a `PL` y `SP`) para vincularlos en su sección Development (vía GraphQL `addCloseIssueReferences`) y en el proyecto. Es un PR por submódulo, uno por `TK`.
+- **Primera vez (el `TK` venía de `Implementando`):** `pr-manager` (`crear`) en el repositorio del submódulo, **directamente desde la rama de trabajo hacia la rama base del submódulo** (`develop`, `release` o `main`/`master`, según el origen del `SP`), NUNCA hacia una rama de especificación intermedia (que no existe en los submódulos). Pasando como `issues a vincular` el `TK` (y referencias a `PL` y `SP`) para vincularlos en su sección Development (vía GraphQL `addCloseIssueReferences`) y en el proyecto. Es un PR por submódulo, uno por `TK`.
   - Título: `TK-001 [USR][BCK] - <título de la historia>` (el del issue).
   - Cuerpo: referencia al `TK`, al `PL` y al `SP` (con enlaces) SIN palabras de cierre automático, resumen de lo implementado por tarea, resultado de la regresión, resultado de la revisión y notas del Vault actualizadas.
   - Vinculado al `TK` (sección Development). Comprobarlo con `git-reader` (`issue`).
+- **Retrabajo (el `TK` venía de `Con Observaciones`):** NO se crea un PR nuevo. El PR detectado en el paso 1 ya existe y ya tiene los commits del paso 2 (mismo push de la rama). Solo se actualiza su cuerpo, agregando una entrada fechada con el resumen de lo corregido y el resultado de la nueva regresión; el camino para republicar la revisión en GitHub es `review-pr`, no esta skill.
 
 ### 6. Casillas, estados y comentario (agrupados en una sola llamada)
 Con el PR creado y confirmación del usuario, ejecutar en **UNA SOLA INVOCACIÓN** a `issue-manager` (`lote-operaciones`) todas las acciones sobre los issues:
 1. **Marcar casillas:** marcar todas las casillas `T00X` del `TK`.
 2. **Mover estados (en el proyecto de GitHub):**
-   - **`TK`:** a `Implementado`.
-   - **`PL` de la historia:** a `Implementando` cuando al menos uno de sus `TK` está en `Implementado`; a `Implementado` cuando todos sus `TK` lo están.
+   - **`TK`:** a `Implementado` (desde `Implementando` la primera vez; desde `Con Observaciones` en un retrabajo, retroceso permitido por excepción fija de `issue-manager`).
+   - **`PL` de la historia:** a `Implementando` cuando al menos uno de sus `TK` está en `Implementado` o más avanzado (`En Revisión`, `Con Observaciones` o `Done`); a `Implementado` cuando todos sus `TK` lo están.
    - **`SP`:** a `Implementando` cuando al menos un `PL` está en `Implementando` o `Implementado`; a `Implementado` cuando todos sus `PL` están en `Implementado` (solo cuando todos sus `PL` ya están en `Planificado` o más avanzado).
 3. **Comentario en el `TK`:** enlace al PR, resumen de lo hecho y de las decisiones consultadas durante la implementación. El issue NO se cierra.
 4. **Verificación:** una sola comprobación posterior con `git-reader` (`issues-proyecto`) para validar que los estados quedaron actualizados en el proyecto.
@@ -72,4 +74,4 @@ Reporte corto con el resultado de cada bloque (verificación, commit y push, gra
 - **IMPLEMENTADO:** todo cumple. Indicar PR (número y enlace), estado final del `TK`, del `PL` y del `SP`, y cuántos `TK` quedan pendientes en el `PL`.
 - **NO CERRADO:** lista de bloqueos, cada uno con qué falta, dónde y qué paso lo corrige.
 
-Quedan fuera de esta skill, por ser automatizables o manuales: regenerar `graphify-out/` tras cada merge o rebase, sincronizar las demás ramas con la base tras un merge, y cerrar los issues `PL` y `SP`.
+Quedan fuera de esta skill, por ser automatizables o manuales: regenerar `graphify-out/` tras cada merge o rebase, sincronizar las demás ramas con la base tras un merge, y cerrar los issues `PL` y `SP`. La revisión formal del PR en GitHub (aprobar, comentar o solicitar cambios) y el cierre del `TK` son de `review-pr`, que se invoca después de esta skill.

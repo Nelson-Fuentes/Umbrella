@@ -48,7 +48,7 @@ Las operaciones de escritura se confirman antes con el usuario.
 ### 3b. Proyecto de GitHub
 Con confirmación del usuario, `github-setup`:
 - `verificar-proyecto`: existe y hay acceso.
-- `configurar-estados`: `Backlog` → `Especificado` → `Planificando` → `Planificado` → `Implementando` → `Implementado`, insertando los que falten tras `Backlog` y conservando los existentes y su orden.
+- `configurar-estados`: `Backlog` → `Especificado` → `Planificando` → `Planificado` → `Implementando` → `Implementado` → `En Revisión` → `Con Observaciones` → `Done`, insertando los que falten tras `Backlog` y conservando los existentes y su orden. `En Revisión`, `Con Observaciones` y `Done` solo los usa el `TK`.
 - `campo-estimate`: campo `Estimate` de tipo número (puntos de historia en Fibonacci); lo usa `plan-close`.
 - `campo-iteracion`: comprobar el campo de iteración que usa `sprint-close` y crearlo si el usuario lo confirma.
 - `etiquetas-base`: `specification` y `plan` en la raíz, `task` en los submódulos, y las de prioridad acordadas.
@@ -57,7 +57,8 @@ Quién usa los estados:
 - `issue-manager` crea cada `SP`, `PL` y `TK` en `Backlog`.
 - `specify-close` mueve el `SP` a `Especificado`.
 - `plan-close` mueve cada `PL` a `Planificado`; el `SP` pasa a `Planificando` cuando el primer `PL` llega a `Planificado`, y a `Planificado` cuando todos lo están.
-- `implement` mueve el `TK` a `Implementando`; `implement-close` lo mueve a `Implementado` al crear el PR. El `PL` pasa a `Implementando` cuando al menos uno de sus `TK` está `Implementado`, y a `Implementado` cuando todos lo están. El `SP` sigue la misma regla respecto de sus `PL`, pero solo cuando todos sus `PL` están en `Planificado`.
+- `implement` mueve el `TK` a `Implementando`; `implement-close` lo mueve a `Implementado` al crear el PR (o, en un retrabajo desde `Con Observaciones`, al agregar los commits de corrección al PR existente). El `PL` pasa a `Implementando` cuando al menos uno de sus `TK` está `Implementado` o más avanzado, y a `Implementado` cuando todos sus `TK` llegaron a `Implementado` o más avanzado. El `SP` sigue la misma regla respecto de sus `PL`, pero solo cuando todos sus `PL` están en `Planificado`.
+- `review-pr` mueve el `TK` a `En Revisión` al publicar la revisión del PR en GitHub, y después a `Done` (cerrando el issue) si no quedaron hallazgos publicados, o a `Con Observaciones` si quedaron. Desde `Con Observaciones`, el retrabajo (`implement` + `implement-close`) y una nueva corrida de `review-pr` pueden repetirse hasta llegar a `Done`. Son los únicos estados y el único cierre de issue que no mueven ni afectan al `PL` ni al `SP`: para ellos, un `TK` en `Implementado`, `En Revisión`, `Con Observaciones` o `Done` cuenta igual (ya "hecho" a efectos de sus padres).
 
 ### 4. Vault y Graphify (reglas del prompt del Vault)
 Crear `/vault` como repo propio y submódulo de la raíz, rama única `main`: con confirmación, `github-setup` (`crear-repo`) y después `git-operator` (`agregar-submodulo`). Aplicar estas reglas, que son las del prompt del Vault de la metodología (Modelo Híbrido: Obsidian LLM Wiki + Graphify, en una sola instrucción).
@@ -234,4 +235,4 @@ Lo que genera este init es **configuración SDD**: `CLAUDE.md`, `.agents/AGENTS.
 - Reportar, por repo, si la configuración quedó commiteada (rama y commit) o pendiente (qué archivos y qué skill la subirá).
 
 ## Salida
-Reporte final corto: qué se instaló, qué ramas se crearon, si se crearon los estados `Especificado`, `Planificando`, `Planificado`, `Implementando` e `Implementado`, el campo `Estimate`, el campo de iteración y las etiquetas base, qué CLAUDE.md y AGENTS.md se escribieron, arquitectura fijada por submódulo, configuración SDD commiteada (rama y commit) o pendiente por repo, y pendientes que requieren decisión humana.
+Reporte final corto: qué se instaló, qué ramas se crearon, si se crearon los estados `Especificado`, `Planificando`, `Planificado`, `Implementando`, `Implementado`, `En Revisión`, `Con Observaciones` y `Done`, el campo `Estimate`, el campo de iteración y las etiquetas base, qué CLAUDE.md y AGENTS.md se escribieron, arquitectura fijada por submódulo, configuración SDD commiteada (rama y commit) o pendiente por repo, y pendientes que requieren decisión humana.

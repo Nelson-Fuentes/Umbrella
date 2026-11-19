@@ -40,6 +40,8 @@ run_rulesync \
 
 echo "==> Copiando manifiestos de packaging/ y la regla de runtime que el formato de plugin no incluye"
 cp -r "packaging/claudecode-plugin/.claude-plugin" "dist/claude/plugins/${PLUGIN_NAME}/"
+mkdir -p "dist/claude/.claude-plugin"
+cp "packaging/claudecode-marketplace/.claude-plugin/marketplace.json" "dist/claude/.claude-plugin/marketplace.json"
 mkdir -p "dist/claude/plugins/${PLUGIN_NAME}/docs/rules"
 cp ".rulesync/rules/sdd-antigravity-runtime.md" "dist/claude/plugins/${PLUGIN_NAME}/docs/rules/"
 cp ".rulesync/rules/sdd-metodologia-umbrella.md" "dist/claude/plugins/${PLUGIN_NAME}/docs/rules/"

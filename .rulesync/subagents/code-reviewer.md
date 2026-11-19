@@ -1,7 +1,7 @@
 ---
 name: code-reviewer
 targets: ["*"]
-description: "Subagente de solo lectura de la metodología SDD Umbrella que revisa, en un contexto limpio, el diff de una rama de trabajo de un submódulo (exportado a archivo por git-reader) contra el plan, la spec, la constitution, el CLAUDE.md o AGENTS.md del submódulo y las reglas aprobadas del Vault. Devuelve hallazgos priorizados con su origen; no corrige nada y no usa git. Se lanza desde implement antes del commit."
+description: "Subagente de solo lectura de la metodología SDD Umbrella que revisa, en un contexto limpio, el diff de una rama de trabajo o de un PR de un submódulo (exportado a archivo por git-reader) contra el plan, la spec, la constitution, el CLAUDE.md o AGENTS.md del submódulo y las reglas aprobadas del Vault. Devuelve hallazgos priorizados con su origen; no corrige nada y no usa git. Lo lanza implement antes del commit, y review-pr sobre el PR ya creado."
 antigravity:
   tools:
     - view_file

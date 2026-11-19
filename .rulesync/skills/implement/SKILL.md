@@ -53,8 +53,8 @@ La crea esta skill directamente desde la rama base; no se espera que exista de a
 - Las notas `approved` del Vault mandan; las `draft` relacionadas explican el cambio planificado.
 
 ### 4. Estado del `TK`
-- Con confirmación, `issue-manager` (`mover-estado`) lleva el `TK` a `Implementando` (los estados de los `TK` son `Backlog` → `Implementando` → `Implementado`). Si el estado no existe en el proyecto, es un bloqueo de configuración (lo crea `github-setup`).
-- Esta skill no mueve a `Implementado` ni cambia el estado de los padres (`PL`, `SP`): lo hace `implement-close`.
+- Con confirmación, `issue-manager` (`mover-estado`) lleva el `TK` a `Implementando` (la secuencia completa del `TK` es `Backlog` → `Implementando` → `Implementado` → `En Revisión` → `Con Observaciones` → `Done`). Si el estado no existe en el proyecto, es un bloqueo de configuración (lo crea `github-setup`).
+- Esta skill no mueve a `Implementado` ni cambia el estado de los padres (`PL`, `SP`): lo hace `implement-close`. La revisión del PR (`En Revisión`, `Con Observaciones`, `Done`) es de `review-pr`, después de `implement-close`.
 
 ### 5. Implementar las tareas
 Para cada tarea `T00X` sin marcar, en el orden de la checklist:

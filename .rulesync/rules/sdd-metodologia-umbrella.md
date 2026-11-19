@@ -30,8 +30,8 @@ Metodología de ingeniería de software agnóstica de tecnología. Combina un re
 |---|---|
 | `git-reader` | Toda LECTURA de git y GitHub: estado de repos y ramas, divergencias, trabajo en curso, diffs (exportados a archivo), issues, PR, tags, checks y campos del proyecto. |
 | `git-operator` | Escritura en repositorios: ramas (y su vínculo con el issue), checkout, fast-forward, commit, push, punteros y alta de submódulos. |
-| `issue-manager` | Issues: crear (`SP`, `PL`, `TK`), actualizar, comentar, marcar casillas y mover el estado en el proyecto. |
-| `pr-manager` | Pull requests: crear sin palabras de cierre y fusionar solo con merge commit. |
+| `issue-manager` | Issues: crear (`SP`, `PL`, `TK`), actualizar, comentar, marcar casillas, mover el estado en el proyecto y, solo para un `TK` en `Done`, cerrarlo (única forma de cierre de la metodología, exclusiva de `review-pr`). |
+| `pr-manager` | Pull requests: crear sin palabras de cierre, publicar la revisión (aprobar, comentar o solicitar cambios) y fusionar solo con merge commit. |
 | `release-manager` | Versionado `vMM.mm.pp`, release notes, tags y releases. |
 | `github-setup` | Configuración del proyecto (estados, `Estimate`, iteración), etiquetas base y repositorio del Vault. |
 
@@ -92,16 +92,17 @@ Metodología de ingeniería de software agnóstica de tecnología. Combina un re
    - `/speckit.specify --name <rama>` desde la raíz crea la rama de especificación únicamente en la raíz. Los submódulos no se tocan (como máximo se colocan en su rama base para lectura de grafos/código). El Vault se actualiza en `draft`.
    - `clarify`, `plan`, `analyze`, `tasks` y `taskstoissues`.
    - Al crear las tareas, las notas del Vault pasan a `approved`.
-2. **Desarrollo (Sprint N):** `implement` crea en el submódulo la rama de tarea (`<spec>-<tk-xxx>`) **directamente desde la rama base del submódulo** (`develop`, `release` o `main`). Se actualiza el Vault con lo que surja de la implementación. Al terminar (`implement-close`), cada `TK` crea su PR **directamente hacia su rama base** en el submódulo.
-3. **Sincronización:** tras cada PR aprobado y merge a `develop`, las demás ramas nacidas de `develop` se actualizan con **rebase**, y su `graphify-out/` se regenera. El historial se reescribe también en el repo remoto (`--force-with-lease`). Esta sincronización la hace el Desarrollador (o CI); ningún subagente de la metodología reescribe historial.
-4. **Cierre de sprint:** pase a `release/*` con **tag nuevo** y **release notes**.
-5. **Observaciones y correcciones:**
+2. **Desarrollo (Sprint N):** `implement` crea en el submódulo la rama de tarea (`<spec>-<tk-xxx>`) **directamente desde la rama base del submódulo** (`develop`, `release` o `main`). Se actualiza el Vault con lo que surja de la implementación. Al terminar (`implement-close`), cada `TK` crea su PR **directamente hacia su rama base** en el submódulo, y pasa a `Implementado`.
+3. **Revisión del PR:** `review-pr` relanza `code-reviewer` sobre el diff actual del PR, el usuario decide qué hallazgos publicar, descartar o reclasificar, y se publica la revisión en GitHub (`pr-manager`, `revisar`). Sin hallazgos publicados, el `TK` pasa a `Done` y se cierra (único cierre automático de un issue en toda la metodología); con hallazgos publicados, pasa a `Con Observaciones` y el retrabajo vuelve por `implement` → `implement-close` (mismo PR) → `review-pr`, hasta quedar aprobado.
+4. **Sincronización:** tras cada PR aprobado y merge a `develop`, las demás ramas nacidas de `develop` se actualizan con **rebase**, y su `graphify-out/` se regenera. El historial se reescribe también en el repo remoto (`--force-with-lease`). Esta sincronización la hace el Desarrollador (o CI); ningún subagente de la metodología reescribe historial.
+5. **Cierre de sprint:** pase a `release/*` con **tag nuevo** y **release notes**.
+6. **Observaciones y correcciones:**
    - Van por release y pasan siempre por el Vault y Graphify según la responsabilidad.
    - Según su tamaño pasan o no por Spec Kit.
    - Cada observación genera un issue con la prioridad de su color.
    - Cada issue indica si el error es sobre `main` o sobre `release`, y en qué tag se identificó.
    - Los issues pasan automáticamente a la siguiente iteración.
-6. **Paso a `main`:** cada sprint, según la semaforización.
+7. **Paso a `main`:** cada sprint, según la semaforización.
 
 ## 7. Semaforización
 

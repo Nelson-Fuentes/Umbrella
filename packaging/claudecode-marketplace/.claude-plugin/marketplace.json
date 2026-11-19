@@ -1,0 +1,12 @@
+{
+  "name": "umbrella-local",
+  "owner": { "name": "local" },
+  "description": "Marketplace local (build de este repo) para el plugin de la metodologia SDD Umbrella en Claude Code.",
+  "plugins": [
+    {
+      "name": "umbrella",
+      "source": "./plugins/umbrella",
+      "description": "Metodologia SDD Umbrella (v8) para Claude Code: skills umbrella:* (init, specify, plan, implement, cierres de fase, sprint y fixes) y subagentes de lectura y de git/GitHub."
+    }
+  ]
+}

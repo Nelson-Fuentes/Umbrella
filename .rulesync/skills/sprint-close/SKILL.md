@@ -38,7 +38,7 @@ Con `git-reader`, por cada repositorio:
 - `divergencia` `develop` → `release`: commits y PR que `release` todavía no tiene. Si no hay nada pendiente, ese repositorio se omite en la etapa.
 - `divergencia` `release` → producción: commits y PR que producción todavía no tiene, incluidos los commits de fix hechos directo en `release` (RFR).
 - **Divergencia a la inversa:** commits de `release` que `develop` no tiene (fixes de release). Si los hay, avisar: deben volver a `develop` o se perderán en el siguiente ciclo (paso 7).
-- `pr` abiertos hacia `develop` o `release` e `issues-proyecto` del sprint: `TK` que no están en `Implementado`, y `PL` y `SP` con trabajo sin terminar. Mostrarlos al usuario; no se bloquea el pase por esto, pero el usuario debe confirmar que lo que queda fuera es intencional.
+- `pr` abiertos hacia `develop` o `release` e `issues-proyecto` del sprint: `TK` que no están cerrados en `Done` (incluye los que siguen en `Implementado`, `En Revisión` o `Con Observaciones`: su PR no terminó la revisión de `review-pr`), y `PL` y `SP` con trabajo sin terminar. Mostrarlos al usuario; no se bloquea el pase por esto, pero el usuario debe confirmar que lo que queda fuera es intencional.
 - `checks` de cada rama (último commit). Una rama con checks fallando es un bloqueo hasta que el usuario decida.
 
 ### 3. Versiones y tags

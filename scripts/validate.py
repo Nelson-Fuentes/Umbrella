@@ -43,6 +43,19 @@ def main() -> int:
         "no se copio la regla de runtime al plugin de Claude Code (claudecode-plugin no genera 'rules')",
     )
 
+    claude_marketplace = DIST / "claude" / ".claude-plugin" / "marketplace.json"
+    require(claude_marketplace.is_file(), f"falta {claude_marketplace}")
+    if claude_marketplace.is_file():
+        try:
+            data = json.loads(claude_marketplace.read_text())
+            names = [p.get("name") for p in data.get("plugins", [])]
+            require(
+                PLUGIN_NAME in names,
+                f"{claude_marketplace} no lista el plugin '{PLUGIN_NAME}'",
+            )
+        except json.JSONDecodeError as exc:
+            errors.append(f"{claude_marketplace} no es JSON valido: {exc}")
+
     antigravity_plugin = DIST / "antigravity" / PLUGIN_NAME
     require(antigravity_plugin.is_dir(), f"falta {antigravity_plugin}")
     ag_manifest = antigravity_plugin / "plugin.json"
